@@ -13,8 +13,26 @@
         }
 
         .event {
-            padding: 5px;
-            border-bottom: 1px solid #eee;
+            padding: 8px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            background-color: #f4f4f4;
+            transition: background-color 1s ease;
+        }
+
+        .event.new-event {
+            background-color: #d1ffd1;
+            animation: fadeOut 3s forwards;
+        }
+
+        @keyframes fadeOut {
+            0% {
+                background-color: #d1ffd1;
+            }
+
+            100% {
+                background-color: #f4f4f4;
+            }
         }
     </style>
 </head>

@@ -1,3 +1,5 @@
+let lastEventIds = new Set(); // store previously shown events
+
 async function fetchEvents() {
     try {
         const res = await fetch("/events");
@@ -21,8 +23,16 @@ async function fetchEvents() {
             div.className = "event";
             div.innerText = text;
 
+            // Highlight if this is a new event
+            if (!lastEventIds.has(e._id)) {
+                div.classList.add("new-event");
+            }
+
             container.appendChild(div);
         });
+
+        // Update the set of displayed event IDs
+        lastEventIds = new Set(data.map(e => e._id));
 
     } catch (err) {
         console.error("Error fetching events:", err);
@@ -30,4 +40,4 @@ async function fetchEvents() {
 }
 
 setInterval(fetchEvents, 15000);
-fetchEvents(); 
+fetchEvents();
