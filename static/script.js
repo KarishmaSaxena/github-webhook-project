@@ -1,37 +1,33 @@
 async function fetchEvents() {
+    try {
+        const res = await fetch("/events");
+        const data = await res.json();
 
-    const res = await fetch("/events");
-    const data = await res.json();
+        const container = document.getElementById("events");
+        container.innerHTML = ""; // clear old events
 
-    const container = document.getElementById("events");
-    container.innerHTML = "";
+        data.forEach(e => {
+            let text = "";
 
-    data.forEach(e => {
+            if (e.action === "push") {
+                text = `${e.author} pushed to ${e.to_branch} on ${e.timestamp}`;
+            } else if (e.action === "pull_request") {
+                text = `${e.author} submitted a pull request from ${e.from_branch} to ${e.to_branch} on ${e.timestamp}`;
+            } else if (e.action === "merge") {
+                text = `${e.author} merged ${e.from_branch} to ${e.to_branch} on ${e.timestamp}`;
+            }
 
-        let text = "";
+            const div = document.createElement("div");
+            div.className = "event";
+            div.innerText = text;
 
-        if (e.action === "push") {
-            text = `${e.author} pushed to ${e.to_branch} on ${e.timestamp}`;
-        }
+            container.appendChild(div);
+        });
 
-        if (e.action === "pull_request") {
-            text = `${e.author} submitted a pull request from ${e.from_branch} to ${e.to_branch} on ${e.timestamp}`;
-        }
-
-        if (e.action === "merge") {
-            text = `${e.author} merged ${e.from_branch} to ${e.to_branch} on ${e.timestamp}`;
-        }
-
-        const div = document.createElement("div");
-        div.className = "event";
-        div.innerText = text;
-
-        container.appendChild(div);
-
-    });
-
+    } catch (err) {
+        console.error("Error fetching events:", err);
+    }
 }
 
-// refresh every 15 sec
 setInterval(fetchEvents, 15000);
-fetchEvents();
+fetchEvents(); 
