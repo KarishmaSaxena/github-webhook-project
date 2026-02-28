@@ -3,45 +3,129 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>GitHub Activity</title>
+    <title>GitHub Events Dashboard</title>
     <style>
-        #events {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f4f4f4;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
             padding: 10px;
-            font-family: sans-serif;
+            border: 1px solid #ccc;
+            text-align: left;
         }
 
-        .event {
-            padding: 8px;
-            margin-bottom: 4px;
-            border-radius: 4px;
-            background-color: #f4f4f4;
-            transition: background-color 1s ease;
+        th {
+            background: #333;
+            color: #fff;
         }
 
-        .event.new-event {
-            background-color: #d1ffd1;
-            animation: fadeOut 3s forwards;
-        }
-
-        @keyframes fadeOut {
-            0% {
-                background-color: #d1ffd1;
-            }
-
-            100% {
-                background-color: #f4f4f4;
-            }
+        select,
+        input {
+            padding: 5px;
+            margin-right: 10px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 
 <body>
-    <h1>GitHub Activity</h1>
-    <div id="events"></div>
-    <script src="/static/script.js"></script>
+    <h1>GitHub Events Dashboard</h1>
+
+    <!-- Filters -->
+    <label for="eventFilter">Filter by event:</label>
+    <select id="eventFilter">
+        <option value="all">All</option>
+        <option value="push">Push</option>
+        <option value="merge">Merge</option>
+        <option value="pull_request">Pull Request</option>
+        <option value="issue">Issue</option>
+    </select>
+
+    <label for="searchBox">Search (branch/title):</label>
+    <input type="text" id="searchBox" placeholder="Enter branch name or issue title">
+
+    <table>
+        <thead>
+            <tr>
+                <th>Author</th>
+                <th>Action</th>
+                <th>From Branch</th>
+                <th>To Branch / Title</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody id="events-body"></tbody>
+    </table>
+
+    <script>
+        const eventFilter = document.getElementById('eventFilter');
+        const searchBox = document.getElementById('searchBox');
+
+        async function loadEvents() {
+            const res = await fetch('/events');
+            let events = await res.json();
+
+            const filterValue = eventFilter.value;
+            const searchText = searchBox.value.toLowerCase();
+
+            if (filterValue !== 'all') {
+                events = events.filter(ev => {
+                    if (filterValue === 'push') return ev.action.startsWith('push');
+                    if (filterValue === 'merge') return ev.action === 'merge';
+                    if (filterValue === 'pull_request') return ev.action.startsWith('pull_request');
+                    if (filterValue === 'issue') return ev.action.startsWith('issue');
+                });
+            }
+
+            if (searchText) {
+                events = events.filter(ev =>
+                    (ev.from_branch && ev.from_branch.toLowerCase().includes(searchText)) ||
+                    (ev.to_branch && ev.to_branch.toLowerCase().includes(searchText)) ||
+                    (ev.title && ev.title.toLowerCase().includes(searchText))
+                );
+            }
+
+            const tbody = document.getElementById('events-body');
+            tbody.innerHTML = '';
+
+            events.forEach(ev => {
+                const tr = document.createElement('tr');
+                let color = '';
+                if (ev.action.startsWith('push')) color = '#cce5ff';
+                else if (ev.action === 'merge') color = '#d4edda';
+                else if (ev.action.startsWith('pull_request')) color = '#e2d4ff';
+                else if (ev.action.startsWith('issue')) color = '#f8d7da';
+
+                tr.style.backgroundColor = color;
+                tr.innerHTML = `
+                    <td>${ev.author || ''}</td>
+                    <td>${ev.action || ''}</td>
+                    <td>${ev.from_branch || ''}</td>
+                    <td>${ev.to_branch || ev.title || ''}</td>
+                    <td>${ev.timestamp}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            tbody.scrollTop = tbody.scrollHeight;
+        }
+
+        loadEvents();
+        setInterval(loadEvents, 5000);
+
+        eventFilter.addEventListener('change', loadEvents);
+        searchBox.addEventListener('input', loadEvents);
+    </script>
 </body>
 
 </html>

@@ -1,1 +1,16 @@
-Webhook test content
+# Webhook Repo
+
+This repository contains a Flask app that receives GitHub webhook events from `action-repo` and displays them on a live dashboard.
+
+## Requirements
+
+- Python 3.9+
+- MongoDB
+- ngrok (for public URL to receive webhooks)
+
+## Setup
+
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/<your-username>/webhook-repo.git
+   cd webhook-repo

@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 app = Flask(__name__)
 CORS(app)
 
-# MongoDB setup
 client = MongoClient("mongodb://localhost:27017/")
 db = client["github"]
 collection = db["events"]
@@ -33,20 +32,29 @@ def webhook():
         collection.insert_one(doc)
 
     elif event_type == "pull_request":
-        author = data['pull_request']['user']['login']
-        from_branch = data['pull_request']['head']['ref']
-        to_branch = data['pull_request']['base']['ref']
-        merged = data['pull_request']['merged']
+        action_type = data['action']
+        pr = data['pull_request']
+        author = pr['user']['login']
+        from_branch = pr['head']['ref']
+        to_branch = pr['base']['ref']
+        merged = pr['merged']
 
-        action = "merge" if merged else "pull_request"
-
-        doc = {
-            "author": author,
-            "action": action,
-            "from_branch": from_branch,
-            "to_branch": to_branch,
-            "timestamp": datetime.now(timezone.utc)
-        }
+        if action_type == "closed" and merged:
+            doc = {
+                "author": author,
+                "action": "merge",
+                "from_branch": from_branch,
+                "to_branch": to_branch,
+                "timestamp": datetime.now(timezone.utc)
+            }
+        else:
+            doc = {
+                "author": author,
+                "action": f"pull_request_{action_type}",
+                "from_branch": from_branch,
+                "to_branch": to_branch,
+                "timestamp": datetime.now(timezone.utc)
+            }
         collection.insert_one(doc)
 
     elif event_type == "issues":
@@ -67,13 +75,11 @@ def webhook():
 
 @app.route('/events')
 def events():
-    # Get latest 20 events
     data = list(collection.find().sort("timestamp", -1).limit(20))
 
     for d in data:
         d['_id'] = str(d['_id'])
         d['timestamp'] = d['timestamp'].strftime("%d %b %Y %I:%M %p UTC")
-
     return jsonify(data)
 
 

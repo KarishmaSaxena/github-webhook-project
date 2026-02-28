@@ -23,7 +23,6 @@ async function fetchEvents() {
             div.className = "event";
             div.innerText = text;
 
-            // Highlight new events
             if (!lastEventIds.has(e._id)) {
                 div.classList.add("new-event");
             }

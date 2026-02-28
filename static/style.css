@@ -1,0 +1,38 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f9f9f9;
+}
+
+h1 {
+    text-align: center;
+}
+
+#events {
+    max-width: 800px;
+    margin: 20px auto;
+}
+
+.event {
+    padding: 10px;
+    margin-bottom: 8px;
+    border-left: 5px solid #555;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.event:contains("push") {
+    border-color: green;
+}
+
+.event:contains("pull request") {
+    border-color: blue;
+}
+
+.event:contains("merge") {
+    border-color: brown;
+}
+
+.event:contains("issue") {
+    border-color: orange;
+}
