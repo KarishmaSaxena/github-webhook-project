@@ -6,37 +6,32 @@ async function fetchEvents() {
         const data = await res.json();
 
         const container = document.getElementById("events");
+        container.innerHTML = "";
 
         data.forEach(e => {
-            // Skip already displayed events
-            if (lastEventIds.has(e._id)) return;
-
             let text = "";
-            let icon = "";
 
             if (e.action === "push") {
-                icon = "📌";
-                text = `${e.author} pushed to ${e.to_branch}`;
+                text = `📌 ${e.author} pushed to ${e.to_branch} on ${e.timestamp}`;
             } else if (e.action === "pull_request") {
-                icon = "🔀";
-                text = `${e.author} submitted a pull request from ${e.from_branch} to ${e.to_branch}`;
+                text = `📌 ${e.author} submitted a pull request from ${e.from_branch} to ${e.to_branch} on ${e.timestamp}`;
             } else if (e.action === "merge") {
-                icon = "✅";
-                text = `${e.author} merged ${e.from_branch} to ${e.to_branch}`;
-            } else if (e.action.startsWith("issue")) {
-                icon = "🐛";
-                text = `${e.author} ${e.action.replace("issue_", "")} issue "${e.title}"`;
+                text = `📌 ${e.author} merged ${e.from_branch} to ${e.to_branch} on ${e.timestamp}`;
             }
 
-            text += ` on ${new Date(e.timestamp).toLocaleString()}`;
-
             const div = document.createElement("div");
-            div.className = "event new-event";
-            div.innerText = `${icon} ${text}`;
+            div.className = "event";
+            div.innerText = text;
 
-            container.prepend(div);
-            lastEventIds.add(e._id);
+            // Highlight new events
+            if (!lastEventIds.has(e._id)) {
+                div.classList.add("new-event");
+            }
+
+            container.appendChild(div);
         });
+
+        lastEventIds = new Set(data.map(e => e._id));
 
     } catch (err) {
         console.error("Error fetching events:", err);
