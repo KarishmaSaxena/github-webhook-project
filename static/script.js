@@ -1,4 +1,4 @@
-let lastEventIds = new Set(); // store previously shown events
+let lastEventIds = new Set();
 
 async function fetchEvents() {
     try {
@@ -6,33 +6,37 @@ async function fetchEvents() {
         const data = await res.json();
 
         const container = document.getElementById("events");
-        container.innerHTML = ""; // clear old events
 
         data.forEach(e => {
+            // Skip already displayed events
+            if (lastEventIds.has(e._id)) return;
+
             let text = "";
+            let icon = "";
 
             if (e.action === "push") {
-                text = `${e.author} pushed to ${e.to_branch} on ${e.timestamp}`;
+                icon = "📌";
+                text = `${e.author} pushed to ${e.to_branch}`;
             } else if (e.action === "pull_request") {
-                text = `${e.author} submitted a pull request from ${e.from_branch} to ${e.to_branch} on ${e.timestamp}`;
+                icon = "🔀";
+                text = `${e.author} submitted a pull request from ${e.from_branch} to ${e.to_branch}`;
             } else if (e.action === "merge") {
-                text = `${e.author} merged ${e.from_branch} to ${e.to_branch} on ${e.timestamp}`;
+                icon = "✅";
+                text = `${e.author} merged ${e.from_branch} to ${e.to_branch}`;
+            } else if (e.action.startsWith("issue")) {
+                icon = "🐛";
+                text = `${e.author} ${e.action.replace("issue_", "")} issue "${e.title}"`;
             }
+
+            text += ` on ${new Date(e.timestamp).toLocaleString()}`;
 
             const div = document.createElement("div");
-            div.className = "event";
-            div.innerText = text;
+            div.className = "event new-event";
+            div.innerText = `${icon} ${text}`;
 
-            // Highlight if this is a new event
-            if (!lastEventIds.has(e._id)) {
-                div.classList.add("new-event");
-            }
-
-            container.appendChild(div);
+            container.prepend(div);
+            lastEventIds.add(e._id);
         });
-
-        // Update the set of displayed event IDs
-        lastEventIds = new Set(data.map(e => e._id));
 
     } catch (err) {
         console.error("Error fetching events:", err);
